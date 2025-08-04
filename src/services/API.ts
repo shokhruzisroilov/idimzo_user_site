@@ -2,7 +2,7 @@ import axios from 'axios'
 import { getItem, setItem, removeItem } from '../helpers/persistanceStorage'
 import AuthService from './AuthService'
 import { store } from '@/redux/store'
-import { logout } from '@/redux/slices/authSlice' // 👈
+import { logout } from '@/redux/slices/authSlice'
 
 let isRefreshing = false
 type FailedRequest = {
