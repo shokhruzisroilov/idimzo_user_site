@@ -108,7 +108,7 @@ const LoginPage = () => {
 						value={phone}
 						onChange={handlePhoneChange}
 						placeholder='__ ___ __ __'
-						className='flex-1 outline-none bg-transparent text-sm sm:text-base ml-1'
+						className='flex-1 outline-none bg-transparent text-sm sm:text-base ml-1 focus:ring-0 focus:outline-none focus:border-transparent'
 						maxLength={13}
 					/>
 				</div>
