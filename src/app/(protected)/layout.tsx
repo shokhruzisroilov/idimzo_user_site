@@ -15,9 +15,9 @@ export default function ProtectedLayout({ children }: { children: ReactNode }) {
 	useEffect(() => {
 		const accessToken = getItem<string>('accessToken')
 		if (!accessToken) {
-			router.replace('/login') // 🔄 Login sahifasiga redirect
+			router.replace('/login')
 		} else {
-			setLoading(false) // ✅ Faqat token bo‘lsa kontent ochiladi
+			setLoading(false)
 		}
 	}, [router])
 

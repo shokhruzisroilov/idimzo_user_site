@@ -2,19 +2,49 @@
 
 import Image from 'next/image'
 import Link from 'next/link'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { FaPhoneAlt } from 'react-icons/fa'
 import { IoIosNotifications } from 'react-icons/io'
 import { FiLogOut } from 'react-icons/fi'
 import logo from '@/assets/icons/logo.png'
-import { useDispatch } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
 import { logout } from '@/redux/slices/authSlice'
 import { useRouter } from 'next/navigation'
+import { AppDispatch, RootState } from '@/redux/store'
+import { startNotificationListener } from '@/redux/action/notificationThunk'
+import { setNotification } from '@/redux/slices/notificationSlice'
 
 const Navbar = () => {
-	const [isNotifOpen, setIsNotifOpen] = useState(false)
-	const dispatch = useDispatch()
+	const dispatch = useDispatch<AppDispatch>()
 	const router = useRouter()
+
+	const [isNotifOpen, setIsNotifOpen] = useState(false)
+
+	// Notification stateni reduxdan olamiz
+	const notification = useSelector((state: RootState) => state.notification)
+
+	// 1. Component yuklanganda listenerni ishga tushiramiz
+	useEffect(() => {
+		const unsubscribe = dispatch(
+			startNotificationListener('stj7lHNcOLvG61qHRBtt')
+		)
+
+		return () => {
+			if (typeof unsubscribe === 'function') unsubscribe()
+		}
+	}, [dispatch])
+
+	// 2. endDate tugagach notificationni tozalash
+	useEffect(() => {
+		if (notification.endDate) {
+			const endTimestamp = new Date(notification.endDate).getTime()
+			const now = Date.now()
+
+			if (endTimestamp <= now) {
+				dispatch(setNotification(null))
+			}
+		}
+	}, [notification.endDate, dispatch])
 
 	const handleLogout = () => {
 		dispatch(logout())
@@ -40,30 +70,67 @@ const Navbar = () => {
 						<button
 							onClick={() => setIsNotifOpen(prev => !prev)}
 							className='relative focus:outline-none'
+							aria-label='Notification button'
 						>
 							<IoIosNotifications className='text-blue-600 w-6 h-6 hover:scale-110 transition-transform duration-200' />
-							<span className='absolute -top-2 -right-2 bg-red-500 text-white text-[10px] w-4 h-4 flex items-center justify-center rounded-full'>
-								3
-							</span>
+							{/* Agar kerak bo'lsa, notification countni dinamik qilishingiz mumkin */}
+							{notification.content && (
+								<span className='absolute -top-2 -right-2 bg-red-500 text-white text-[10px] w-5 h-5 flex items-center justify-center rounded-full'>
+									1
+								</span>
+							)}
 						</button>
 
 						{/* Notification Dropdown */}
 						{isNotifOpen && (
-							<div className='absolute right-0 mt-2 w-64 bg-white border rounded shadow-lg z-50'>
+							<div className='absolute right-0 mt-2 w-72 bg-white border rounded shadow-lg z-50'>
 								<div className='p-3 text-sm font-semibold text-gray-700 border-b'>
 									Bildirishnomalar
 								</div>
-								<ul className='divide-y text-sm'>
-									<li className='p-3 hover:bg-gray-100 cursor-pointer'>
-										{`1. Yangi foydalanuvchi ro'yxatdan o'tdi`}
-									</li>
-									<li className='p-3 hover:bg-gray-100 cursor-pointer'>
-										2. Shartnoma tugamoqda
-									</li>
-									<li className='p-3 hover:bg-gray-100 cursor-pointer'>
-										3. Bot orqali yangi so‘rov
-									</li>
-								</ul>
+
+								{notification.loading && (
+									<div className='p-3 text-center text-gray-500'>
+										Yuklanmoqda...
+									</div>
+								)}
+
+								{notification.error && (
+									<div className='p-3 text-center text-red-500'>
+										Xato: {notification.error}
+									</div>
+								)}
+
+								{!notification.loading &&
+									!notification.error &&
+									!notification.content && (
+										<div className='p-3 text-center text-gray-500'>
+											{`Bildirishnoma yo'q`}
+										</div>
+									)}
+
+								{!notification.loading && notification.content && (
+									<ul className='divide-y text-sm max-h-60 overflow-auto'>
+										<li className='p-3 hover:bg-gray-100 cursor-pointer'>
+											{/* Image */}
+											{notification.images?.uz && (
+												<Image
+													src={notification.images?.uz || ''}
+													alt='notification-img'
+													width={64}
+													height={64}
+													className='object-cover rounded-md flex-shrink-0'
+												/>
+											)}
+
+											{/* Matn va tugash sanasi */}
+											<div className='flex flex-col'>
+												<span className='font-medium text-gray-800'>
+													{notification.content.uz}
+												</span>
+											</div>
+										</li>
+									</ul>
+								)}
 							</div>
 						)}
 					</div>
